@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import click
+import commands.config as config
 
-@click.command()
-@click.option('--count', default=1, help='Number of greetings.')
-@click.option('--name', prompt='Your name',
-              help='The person to greet.')
-def hello(count, name):
-    """Simple program that greets NAME for a total of COUNT times."""
-    for x in range(count):
-        click.echo('Hello %s!' % name)
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+
+@click.group(context_settings=CONTEXT_SETTINGS)
+def cli():
+    pass
+
+cli.add_command(config.config)
 
 if __name__ == '__main__':
-    hello()
+    cli()
