@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
 
-import os
+import click
 
-env = os.environ
+@click.command()
+@click.option('--count', default=1, help='Number of greetings.')
+@click.option('--name', prompt='Your name',
+              help='The person to greet.')
+def hello(count, name):
+    """Simple program that greets NAME for a total of COUNT times."""
+    for x in range(count):
+        click.echo('Hello %s!' % name)
 
-for line in env:
-    print (line)
+if __name__ == '__main__':
+    hello()
