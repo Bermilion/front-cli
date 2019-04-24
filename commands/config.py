@@ -35,7 +35,12 @@ def config(sql_user, sql_password, root_dir, list):
 
     if root_dir:
         projects_dir = getConfig()
-        projects_dir['root-dir'] = root_dir
+        if root_dir == 'false' or root_dir == 'False':
+            projects_dir['root-dir'] = bool(0)
+        elif root_dir == 'true' or root_dir == 'True':
+            projects_dir['root-dir'] = bool(1)
+        else:
+            projects_dir['root-dir'] = root_dir
         setConfig(projects_dir)
 
     if list:

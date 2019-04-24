@@ -7,30 +7,7 @@ import subprocess
 env = os.environ
 directory = env['HOME'] + '/.front-cli'
 presetDir = env['HOME'] + '/.front-cli/presets'
-
-def delete_preset():
-    list = [os.path.join(presetDir, o) for o in os.listdir(presetDir)
-            if os.path.isdir(os.path.join(presetDir, o))]
-    i = 0
-    while i < len(list):
-        presetName = list[i].split('/')[len(list[i].split('/')) - 1]
-        click.secho('[' + str(i) + '] — ' + presetName, fg='green')
-        i += 1
-
-    value = int(raw_input('Введите значение: '))
-
-    return list[value].split('/')[len(list[value].split('/')) - 1]
-
-def listFunc():
-    list = [os.path.join(presetDir, o) for o in os.listdir(presetDir)
-            if os.path.isdir(os.path.join(presetDir, o))]
-
-    click.secho('Доступные пресеты', fg='green')
-    i = 0
-    while i < len(list):
-        presetName = list[i].split('/')[len(list[i].split('/')) - 1]
-        click.secho('[' + str(i) + '] — ' + presetName, fg='green')
-        i += 1
+from common import listPresets
 
 @click.command()
 @click.option('--clone', '-c', default=False, help='Клонирование репозитория')
@@ -67,11 +44,12 @@ def preset(clone, update, delete, list):
         if os.path.exists(presetDir + '/' + delete):
             print (delete)
             subprocess.call(['rm', '-rf', presetDir + '/' + delete])
+            click.secho(value + ' удален', fg='yellow')
         else:
             click.echo('нет такого пресета')
-            value = delete_preset()
+            value = listPresets(True)
             subprocess.call(['rm', '-rf', presetDir + '/' + value])
             click.secho(value + ' удален', fg='yellow')
 
     if list:
-        listFunc()
+        listPresets()
