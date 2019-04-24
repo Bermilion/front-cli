@@ -2,6 +2,7 @@
 
 import os
 import click
+import subprocess
 import json
 
 env = os.environ
@@ -49,3 +50,18 @@ def listPresets(select=False):
         click.secho('Доступные пресеты', fg='green')
         echoList(list)
         return list
+
+def getProjectCWD():
+    if getConfig()['root-dir']:
+        return getConfig()['root-dir']
+    else:
+        return os.getcwd()
+
+def copyPreset(name, dir):
+    presetFolder = presetDir + '/' + dir
+    files = os.listdir(presetFolder)
+    for item in files:
+        if item != '.git':
+            subprocess.call(['cp', '-a', presetFolder + '/' + item, getProjectCWD() + '/' + name])
+
+    click.secho('Файлы присета скопированы', fg='green')
