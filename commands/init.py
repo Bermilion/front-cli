@@ -4,11 +4,20 @@ import os
 import click
 import subprocess
 from common import getConfig, controlDir, listPresets, copyPreset, getProjectCWD
+import MySQLdb
 
 env = os.environ
 directory = env['HOME'] + '/.front-cli'
 presetDir = env['HOME'] + '/.front-cli/presets'
 conf = getConfig()
+
+def MYSQLCreateDataTable(name):
+    conn = MySQLdb.connect('localhost', conf['mysql']['user'], conf['mysql']['password'])
+    cursor = conn.cursor()
+    cursor.execute('CREATE DATABASE ' + name.replace('-', '_') + ' CHARACTER SET utf8 COLLATE utf8_general_ci')
+    conn.close()
+    click.secho('База данных ' + str(name) + ' создана!', fg='green')
+
 
 def checking(name):
     projectsDir = conf['root-dir']
@@ -36,7 +45,7 @@ def composerInstall(path, name):
         with open('.env.example', 'r') as file:
             old_data = file.read()
 
-        new_data = old_data.replace('DB_DATABASE=homestead', 'DB_DATABASE=' + name)
+        new_data = old_data.replace('DB_DATABASE=homestead', 'DB_DATABASE=' + name.replace('-', '_'))
         new_data = new_data.replace('DB_USERNAME=homestead', 'DB_USERNAME=' + conf['mysql']['user'])
         new_data = new_data.replace('DB_PASSWORD=secret', 'DB_PASSWORD=' + conf['mysql']['password'])
         new_data = new_data.replace('MAIL_DRIVER=smtp', 'MAIL_DRIVER=log')
@@ -44,10 +53,29 @@ def composerInstall(path, name):
         with open('.env', 'w') as file:
             file.write(new_data)
 
-        # try:
-        #     subprocess.call(['composer', 'install'])
-        # except:
-        #     click.secho('Composer не установлен')
+
+        # Подключение к mysql и создание базы
+        MYSQLCreateDataTable(name)
+
+        try:
+            composer = '/usr/local/bin/composer.phar'
+            subprocess.call([composer, 'install'])
+            subprocess.call(['php', 'artisan', 'key:generate'])
+            subprocess.call(['php', 'artisan', 'migrate'])
+            subprocess.call(['php', 'artisan', 'chunker:seed'])
+        except:
+            click.secho('Composer не установлен или находится не в /usr/local/bin/')
+
+    if os.path.exists(path + '/' + name + '/gulpfile.js'):
+        os.chdir(path + '/' + name)
+
+        with open('gulpfile.js', 'r') as file:
+            old_data = file.read()
+
+            new_data = old_data.replace('http://laravel-preset.loc', 'http://' + str(name) + '.loc')
+
+            with open('gulpfile.js', 'w') as file:
+                file.write(new_data)
 
 @click.command()
 # @click.option('--clone', '-c', default=False, help='Клонирование репозитория')
